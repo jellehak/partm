@@ -1,0 +1,1 @@
+node  "%~dp0\..\lib\bin\partm" %* --config.interactive
