@@ -1,1 +1,1 @@
-node  "%~dp0\..\lib\bin\partm" %* --config.interactive
+node  "%~dp0\..\cli" %* --config.interactive
