@@ -13,6 +13,11 @@ Installation
 ---
 	npm i -g https://github.com/jellehak/partm.git
 
+Web
+---
+To test and view parts you can use this link: https://partm.herokuapp.com/#/search 
+(Work in progress - At the moment you can only view the partm json files)
+
 
 Usage
 ---
@@ -35,12 +40,13 @@ To save a CAD part in your project run:
 
 Supported instructions
 ---
-	install <part.json>				Downloads the part files to the components/<partname>/* directory
-	init (not implemented yet)		Creates a new project to keep track of the used components
-	version (not implemented yet)	
-	remove (not implemented yet)
-	help (not implemented yet)
-	register (not implemented yet)	Register a respository to the global registery
+	install <part.json>						Downloads the part files to the components/<partname>/* directory
+	init (not implemented yet)				Creates a new project to keep track of the used components
+	version <name> (not implemented yet)	Get the parts version
+	remove <name> (not implemented yet)		Removes a part
+	list (not implemented yet)				Lists all used parts
+	help (not implemented yet)				Lists the availible commands
+	register (not implemented yet)			Register a respository to the global registery
 
 	Options
 	-force	Force the download process
