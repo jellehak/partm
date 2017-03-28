@@ -1,19 +1,21 @@
-This project is here to create an open source format for companies to share their part libraries with designers, creators and builders. All data should be hosted on git so changes can easily be push/pulled. Think of it like npm, composer or bower except than for parts. This meta information can be used with your inventory or stock software or with our stock manager software (WIP).
+Partm is a package manager for CAD files. We wish to create an open source format that companies could adopt to share their CAD data / products with designers, creators and builders. 
 
-We hope that this format will be more widely used and great apps can be build on top of this. And most important streamline the product development or product optimalisation process.
+Software designers have been using package manager for a long time, now mechanical engineers can do the same!
 
-Each respository should look like this:
+With the benefit of hosting the files on git changes/updates/new products can easily be push/pulled.
 
-A package.json file descriping the library
-Seperate *.json files referered by the package.json descripting each part ()
+Image what cool apps can grow on a structured open source database with many CAD data.
 
+This meta information can be used with your inventory or stock software.
+
+We hope that companies will adopt this format in the near future so great apps can be build on top of this structured database.
 
 Installation
 ---
 1. Download and install nodejs with npm (https://nodejs.org/en/)
 2. Run
 	
-	npm i -g https://github.com/jellehak/partmanager.git or (near future npm i -g partm) 
+	npm i -g https://github.com/jellehak/partmanager.git
 
 
 Usage
@@ -42,20 +44,32 @@ To save a CAD part in your project run:
 	partm install -s https://github.com/jellehak/partlib-hammond-sample.git
 
 
+How it works
+---
+Each respository should look like this:
+
+A package.json file descriping the library
+Seperate *.json files referered by the package.json descripting each part ()
+
+
 Part scheme
 ---
 The scheme is based on the node package.json scheme more information can be found on: https://docs.npmjs.com/files/package.json.
 
-The most important  is the name and the files array. The files array can contain local or remote files. This will instruct the cli app what to download.
+The most important is the name and the files array. These fields instruct the cli app what to download. (For the moment the files array can only contain remote files.)
+The file array consist of the following fields:
+type = "datasheet","image","step"
+url = the file location
+skip = true/false (if true it will skip this file to download)
+extract = true/false (if true || array the resource will be extracted)
 
 	{
-		"name":"hammond-1455D802",
+		"name":"hammond-1455D602",
 		"version": "1.0.0",
-		"author": { 'name': 'Joe', email: 'email@example.com' },
-		"title":"Hammond Enclosure 1455D802",
+		"title":"Hammond Enclosure 1455D602",
 		"description":"Extruded alu enclosure - DESIGNED FOR 39MM WIDE PC BOARD",
 		"partnumber":"1455D602",
-		"partnumbers":["1455D602","1455D602BK"],
+		"derivedparts":["1455D602","1455D602BK"],
 		"units":"metric",
 		"dimensions":{"length":60,"width":45,"height":25,"units":"mm"},
 		"weight":0.1,
@@ -72,7 +86,7 @@ The most important  is the name and the files array. The files array can contain
 	}
 
 
-Package scheme
+Package scheme (optional)
 ---
 The package scheme links all individual part schemes together, think of it as a collection of parts.
 
