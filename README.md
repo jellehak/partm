@@ -13,8 +13,8 @@ We hope that companies will adopt this format in the near future so great apps c
 Installation
 ---
 1. Download and install nodejs with npm (https://nodejs.org/en/)
-2. Run
-	
+2. Run 
+---
 	npm i -g https://github.com/jellehak/partmanager.git
 
 
@@ -31,7 +31,7 @@ To install a single part run:
 
 	partm install https://raw.githubusercontent.com/jellehak/partm-hammond-sample/master/1455D602.json
 
-To install a full package run:
+To install a full package run: (not working yet)
 
 	partm install https://github.com/jellehak/partlib-hammond-sample.git
 
