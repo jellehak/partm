@@ -42,15 +42,15 @@ To save a CAD part in your project run:
 
 Supported instructions
 ---
-install <part.json>				Downloads the part files to the components/<partname>/* directory
-init (not implemented yet)		Creates a new project to keep track of the used components
-version (not implemented yet)	
-remove (not implemented yet)
-help (not implemented yet)
-register (not implemented yet)	Register a respository to the global registery
+	install <part.json>				Downloads the part files to the components/<partname>/* directory
+	init (not implemented yet)		Creates a new project to keep track of the used components
+	version (not implemented yet)	
+	remove (not implemented yet)
+	help (not implemented yet)
+	register (not implemented yet)	Register a respository to the global registery
 
-Options
--force	Force the download process
+	Options
+	-force	Force the download process
 
 
 Creations of a respository
