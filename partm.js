@@ -35,7 +35,7 @@ function installRemotePart(file, cwd) {
     getRemoteJson()
       //download(file,downloadTo)
       //.then(function() { return require(downloadTo)})
-      .then(log)
+      //.then(log)
       .then(convertToPartObj)
       .then(downloadPartDeps)
       .catch(function (reason) {
@@ -149,6 +149,10 @@ function Part(obj) {
     self.files = obj.files
   }
 
+  // function unzipFiles() {
+
+  // }
+
   //Load a resource from a package
   function downloadAll(to) {
     //Create dir?
@@ -195,13 +199,13 @@ function Part(obj) {
     return Q.all(promiseDownloadAll).then(log);
   }
 
-  function downloadextract(url, zipfile) {
-    download(url, zipfile)
+  function downloadextract(url, destination) {
+    download(url, destination)
       .then(function () {
-        return extractAll(zipfile)
+        return extractAll(destination)
       })
       .then(function () {
-        fs.unlinkSync(zipfile)
+        fs.unlinkSync(destination)
       })
   }
 

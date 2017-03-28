@@ -27,7 +27,7 @@ function install(argv) {
 
   return partm.installRemotePart(endpoint, cwd)
   .then(function (data) {
-    console.log(data)
+    //console.log(data)
   })
 }
 

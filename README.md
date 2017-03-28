@@ -40,6 +40,18 @@ To save a CAD part in your project run:
 	partm install -s https://github.com/jellehak/partlib-hammond-sample.git
 
 
+Supported instructions
+---
+install <part.json>				Downloads the part files to the components/<partname>/* directory
+init (not implemented yet)		Creates a new project to keep track of the used components
+version (not implemented yet)	
+remove (not implemented yet)
+help (not implemented yet)
+
+Options
+-force	Force the download process
+
+
 Proposal for a respository
 ---
 Each respository should look like this:
