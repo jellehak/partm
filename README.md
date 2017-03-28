@@ -47,17 +47,26 @@ init (not implemented yet)		Creates a new project to keep track of the used comp
 version (not implemented yet)	
 remove (not implemented yet)
 help (not implemented yet)
+register (not implemented yet)	Register a respository to the global registery
 
 Options
 -force	Force the download process
 
 
-Proposal for a respository
+Creations of a respository
 ---
-Each respository should look like this:
+Bare method
+1. Copy the part schema example file for each part. 
+2. Upload this to a/your server
+3. Make people aware they can use partm install <***.json> calls
 
-1. One or multiple <partname>.json files
-2. A package.json file descriping the library (optional)
+Version control method
+Tip: Get a good git editor like Visual Studio Code or github desktop. 
+1. Create a new respository on a host like github 
+2. Add one or multiple <partname>.json files
+3. Add a package.json file referencing all your parts (optional)
+4. Run (partm register <*.git>) to add it to the global registery
+
 
 Part scheme
 ---
