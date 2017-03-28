@@ -1,21 +1,17 @@
 Partm is a package manager for CAD files. We wish to create an open source format that companies could adopt to share their CAD data / products with designers, creators and builders. 
 
-Software designers have been using package manager for a long time, now mechanical engineers can do the same!
+Why
+---
+Software designers have been using package manager for a long time, now mechanical engineers can do the same! The proces of getting the right CAD files can be very time consuming. Searching for the right STEP files, downloading the datasheets, finding a good location to store them on your local drive, getting to know where you can buy it, request the price, check what the dimensions or weight is etc. Image doing this many times over, with partm you can do all this with one console command.
 
-With the benefit of hosting the files on git changes/updates/new products can easily be push/pulled.
-
-Image what cool apps can grow on a structured open source database with many CAD data.
-
-This meta information can be used with your inventory or stock software.
-
-We hope that companies will adopt this format in the near future so great apps can be build on top of this structured database.
+Not only will this save you time but imagine what other applications can be created with this open source database. Companies that are willing to share their product information would greatly benefit from a system like this. They keep full control of their repository, can easily add new parts, or update their part information.
 
 Installation
 ---
 1. Download and install nodejs with npm (https://nodejs.org/en/)
 2. Run 
 ---
-	npm i -g https://github.com/jellehak/partmanager.git
+	npm i -g https://github.com/jellehak/partm.git
 
 
 Usage
@@ -44,24 +40,27 @@ To save a CAD part in your project run:
 	partm install -s https://github.com/jellehak/partlib-hammond-sample.git
 
 
-How it works
+Proposal for a respository
 ---
 Each respository should look like this:
 
-A package.json file descriping the library
-Seperate *.json files referered by the package.json descripting each part ()
-
+1. One or multiple <partname>.json files
+2. A package.json file descriping the library (optional)
 
 Part scheme
 ---
-The scheme is based on the node package.json scheme more information can be found on: https://docs.npmjs.com/files/package.json.
+The part scheme is the core of the system, it is heavily based on the node package.json scheme more information can be found on: https://docs.npmjs.com/files/package.json.
 
-The most important is the name and the files array. These fields instruct the cli app what to download. (For the moment the files array can only contain remote files.)
-The file array consist of the following fields:
-type = "datasheet","image","step"
-url = the file location
-skip = true/false (if true it will skip this file to download)
-extract = true/false (if true || array the resource will be extracted)
+The most important is the name and the files array. These fields instruct the cli app what to download. (For the moment the files array can only contain remote files. Later also files from the respository)
+
+A file object consist of the following fields:
+
+	type = "datasheet","image","step"
+	url = the file location
+	skip = true/false (if true it will skip this file to download)
+	extract = true/false (if true || array the resource will be extracted)
+
+Example scheme:
 
 	{
 		"name":"hammond-1455D602",
