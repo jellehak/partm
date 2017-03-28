@@ -16,13 +16,6 @@ Installation
 
 Usage
 ---
-The global partm console app has the following instructions (simular to other packaging managers)
-
-	partm install <*.git>
-	partm init <*.git>
-	partm update <*.git>
-	partm init <*.git>
-
 To install a single part run:
 
 	partm install https://raw.githubusercontent.com/jellehak/partm-hammond-sample/master/1455D602.json
