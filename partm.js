@@ -28,22 +28,32 @@ var fstream = require('fstream');
 
 
 function installRemotePart(file, cwd) {
-  var downloadTo = path.join(cwd,"blalba.json")
-  console.log(downloadTo)
+  //var downloadTo = path.join(cwd,"blalba.json")
+  //console.log("File has been saved to ",clc.green(downloadTo))
 
-  var p = 
-    download(file,downloadTo)
-    
-    .then(convertToPartObj)
-    .then(downloadPartDeps)
-    .catch(function (reason) {
-      console.warn(reason)
-    });
+  var p =
+    getRemoteJson()
+      //download(file,downloadTo)
+      //.then(function() { return require(downloadTo)})
+      .then(log)
+      .then(convertToPartObj)
+      .then(downloadPartDeps)
+      .catch(function (reason) {
+        console.warn(reason)
+      });
   return p
 
   //Promise helpers
+  function getRemoteJson() {
+    var options = {
+      uri: file,
+      method: 'GET',
+      json: true
+    }
+    return rp(options);
+  }
   function convertToPartObj(data) { return new Part(data) }
-  function downloadPartDeps(part) { part.downloadAll(); }
+  function downloadPartDeps(part) { part.downloadAll("./components/" + part._obj.name); }
 }
 
 
@@ -118,6 +128,7 @@ function Part(obj) {
   var directory = "./components/"
 
   //Public properties
+  this.name = "no-name"
   this.title = "no title"
   this.description
   this.files = []
@@ -132,14 +143,24 @@ function Part(obj) {
   //Functions
   function loadFromObj(obj) {
     self._obj = obj
+    self.name = obj.name
     self.title = obj.title
     self.description = obj.description
     self.files = obj.files
   }
 
   //Load a resource from a package
-  function downloadAll() {
-    //console.log(self.files)
+  function downloadAll(to) {
+    //Create dir?
+    if (self.name) directory = "./components/" + self.name
+    directory = to || directory;
+
+    //Create dir if not exist
+    if (!fs.existsSync(directory)) {
+      fs.mkdirSync(directory);
+    }
+
+    console.log("Installing files to directory ", clc.green(directory))
     //logFiles()
 
     promiseDownloadAll = []
@@ -150,7 +171,7 @@ function Part(obj) {
       //console.log(file)
       var filename = path.basename(file.url)
       //console.log(filename)
-      //Which style to store the files?
+      //TODO Which style to store the files?
       //flat list / or each type in own directory?
       //var parsed = parse(decEndpoint)
 
@@ -158,14 +179,14 @@ function Part(obj) {
         console.warn("This file has been marked to be skipped by the creator " + clc.green(file.url));
         continue;
       }
-      var destination = directory + filename;
+      var destination = path.join(directory, filename);
       var exists = fs.existsSync(destination)
 
       if (!exists) {
         if (file.extract) {
-          promiseDownloadAll.push(downloadextract(file.url, directory + filename))
+          promiseDownloadAll.push(downloadextract(file.url, destination))
         } else {
-          promiseDownloadAll.push(download(file.url, directory + filename))
+          promiseDownloadAll.push(download(file.url, destination))
         }
       } else {
         console.warn("File " + clc.green(destination) + " already exist, use the -force option to redownload the file")
@@ -176,16 +197,16 @@ function Part(obj) {
 
   function downloadextract(url, zipfile) {
     download(url, zipfile)
-      .then(function () { 
-        return extractAll(zipfile) 
+      .then(function () {
+        return extractAll(zipfile)
       })
-      .then(function () { 
+      .then(function () {
         fs.unlinkSync(zipfile)
       })
   }
 
   function extractAll(destination) {
-    console.log("Unzipping all files from "+ clc.green(destination) + " to the same directory");
+    console.log("Unzipping all files from " + clc.green(destination) + " to the same directory");
     var readStream = fs.createReadStream(destination);
     var writeStream = fstream.Writer(path.dirname(destination));
 

@@ -1,29 +1,31 @@
 var argv = require('optimist').argv;
 var partm = require('./partm');
+var commands = require('./util/commands');
+//const shell = require('electron').shell;
+
 
 //console.log(argv)
 //console.log("CWD",process.cwd())
-
 var cwd = process.cwd()
 
 
-//Command handler
-var command = argv._[0]
-switch(command) {
-  case 'add': add(argv); break;
-  case 'install': install(argv); break;
-  case 'update': update(argv); break;
-  case 'version': version(argv); break;
-  default: console.log("Unknown command: ",command); help(argv); break;
-}
+
+
+commands.add("install",install)
+//commands.add("remove",remove)
+commands.add("update",update)
+commands.add("version",version)
+//commands.add("add",add)
+commands.run(argv._);
+
 
 //-------------
 // Command handlers
 //-------------
 function install(argv) {
-  var endpoint = argv._[1]
+  var endpoint = argv[1]
 
-  partm.installRemotePart(endpoint, cwd)
+  return partm.installRemotePart(endpoint, cwd)
   .then(function (data) {
     console.log(data)
   })
@@ -40,15 +42,3 @@ function help(argv) {
 }
 
 
-//-----------------------------------
-//TODO : New style command handler
-//Command helpers
-var commands = []
-function registerCommand(command,fn) {
-  commands.push({command:command,fn:fn}) 
-}
-
-registerCommand("install",install)
-registerCommand("update",update)
-registerCommand("version",version)
-//registerCommand("add",add)
