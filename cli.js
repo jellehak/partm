@@ -10,7 +10,7 @@ var cwd = process.cwd()
 
 
 
-
+commands.add("read",read)
 commands.add("install",install)
 //commands.add("remove",remove)
 commands.add("update",update)
@@ -22,10 +22,20 @@ commands.run(argv._);
 //-------------
 // Command handlers
 //-------------
+function read(argv) {
+  var endpoint = argv[1]
+
+  return partm.promiseGetRemoteJson(endpoint)
+  .then(function (data) {
+    console.log(data)
+  })
+}
+
+
 function install(argv) {
   var endpoint = argv[1]
 
-  return partm.installRemotePart(endpoint, cwd)
+  return partm.installRemotePart(endpoint)
   .then(function (data) {
     //console.log(data)
   })

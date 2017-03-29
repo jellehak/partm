@@ -4,12 +4,24 @@ var rp = require('request-promise');
 var parse = require('parse-link');
 var git = require('simple-git')
 var path = require('path')
-var Q = require('q');
+//var Q = require('q');
 var clc = require('cli-color');
 var fs = require('fs');
 var unzip = require('unzip');
 var fstream = require('fstream');
+var ProgressBar = require('progress');
+var Promise = require('bluebird');
+Promise.promisifyAll(fs);
 
+//----------------
+// Exports
+//----------------
+module.exports.installRemotePart = installRemotePart
+module.exports.installPart = installPart
+module.exports.install = install
+module.exports.downloadGitPackage = downloadGitPackage
+module.exports.downloadGitPackage = downloadGitPackage
+module.exports.promiseGetRemoteJson = promiseGetRemoteJson
 //----------------
 //App test
 //----------------
@@ -25,40 +37,20 @@ var fstream = require('fstream');
 //----------------
 //Q.fcall(function () {    return 10; });
 
-
-
-function installRemotePart(file, cwd) {
-  //var downloadTo = path.join(cwd,"blalba.json")
-  //console.log("File has been saved to ",clc.green(downloadTo))
-
+//Install Part from remote location
+function installRemotePart(url) {
   var p =
-    getRemoteJson()
-      //download(file,downloadTo)
-      //.then(function() { return require(downloadTo)})
-      //.then(log)
+    promiseGetRemoteJson(url)
       .then(convertToPartObj)
       .then(downloadPartDeps)
       .catch(function (reason) {
         console.warn(reason)
       });
   return p
-
-  //Promise helpers
-  function getRemoteJson() {
-    var options = {
-      uri: file,
-      method: 'GET',
-      json: true
-    }
-    return rp(options);
-  }
-  function convertToPartObj(data) { return new Part(data) }
-  function downloadPartDeps(part) { part.downloadAll("./components/" + part._obj.name); }
 }
 
 
-
-
+//Install from local location
 function installPart(file) {
   var p = promiseRequire(file)
     .then(convertToPartObj)
@@ -67,13 +59,9 @@ function installPart(file) {
       console.warn(reason)
     });
   return p
-
-  //Promise helpers
-  function convertToPartObj(data) { return new Part(data) }
-  function downloadPartDeps(part) { part.downloadAll(); }
 }
 
-
+//Install full local package
 function install(directory) {
   var promise = loadLocalPackage(directory)
     .then(convertToPackageObj)
@@ -83,10 +71,12 @@ function install(directory) {
 
   //Promise helpers
   function loadLocalPackage(directory) {
-    return Q.fcall(function () { return require(directory + "/package.json"); });
+    return new Promise(function () { return require(directory + "/package.json"); })
+    //return Q.fcall(function () { return require(directory + "/package.json"); });
   }
 }
 
+//Install full package
 function downloadGitPackage(git) {
   var promise = downloadPackageFromGit(git)
     .then(convertToPackageObj)
@@ -102,6 +92,16 @@ function downloadGitPackage(git) {
 //----------
 // Global Promise handlers
 //----------
+function promiseGetRemoteJson(url) {
+  var options = {
+    uri: url,
+    method: 'GET',
+    json: true
+  }
+  return rp(options);
+}
+function convertToPartObj(data) { return new Part(data) }
+function downloadPartDeps(part) { part.downloadAll("./components/" + part._obj.name); }
 function log(data) { console.log(data); return data; }
 function convertToPackageObj(json) { return new Package(json) }
 function downloadPackageFromGit(git) {
@@ -113,15 +113,28 @@ function downloadPackageFromGit(git) {
   })
 }
 function promiseRequire(file) {
-  return Q.fcall(function () { return require(file); });
+  return new Promise(function () { return require(file); })
+  // return Q.fcall(function () { return require(file); });
 }
 
 
+
+function createComponentsFolder() {
+  return new Promise(function () {
+    directory = "./components/"
+    //Create dir if not exist
+    if (!fs.existsSync(directory)) {
+      fs.mkdirSync(directory);
+    }
+  });
+}
 
 //------------
 // Part Class
 //------------
 var download = require("./util/download")
+var uuid = require('node-uuid');
+const validFilename = require('valid-filename');
 
 function Part(obj) {
   var self = this
@@ -133,7 +146,7 @@ function Part(obj) {
   this.description
   this.files = []
   this._obj
-  //Methods
+  //Public Methods
   this.load = load
   this.downloadAll = downloadAll
 
@@ -142,6 +155,10 @@ function Part(obj) {
 
   //Functions
   function loadFromObj(obj) {
+    if (!obj || !obj.name) {
+      console.warn("No valid object provided", obj)
+      throw "No valid object provided", obj
+    }
     self._obj = obj
     self.name = obj.name
     self.title = obj.title
@@ -149,17 +166,18 @@ function Part(obj) {
     self.files = obj.files
   }
 
-  // function unzipFiles() {
-
-  // }
 
   //Load a resource from a package
+  //TODO Which style to store the files?
+  //flat list / or each type in own directory?
+  //var parsed = parse(decEndpoint)
   function downloadAll(to) {
-    //Create dir?
+    //Create components directory if not exist
+    createComponentsFolder()
+
+    //Create part dir if not exist
     if (self.name) directory = "./components/" + self.name
     directory = to || directory;
-
-    //Create dir if not exist
     if (!fs.existsSync(directory)) {
       fs.mkdirSync(directory);
     }
@@ -173,50 +191,105 @@ function Part(obj) {
     for (var k in self.files) {
       var file = self.files[k]
       //console.log(file)
-      var filename = path.basename(file.url)
-      //console.log(filename)
-      //TODO Which style to store the files?
-      //flat list / or each type in own directory?
-      //var parsed = parse(decEndpoint)
 
+      //Check filename
+      var filename = path.basename(file.url)
+      if (!validFilename(filename)) {
+        filename = uuid.v4() + '.zip'  //TODO Add valid extension?
+      }
+
+      //Create destination
+      var destination = path.join(directory, filename);
+
+      //console.log(filename)
       if (file.skip) {
         console.warn("This file has been marked to be skipped by the creator " + clc.green(file.url));
         continue;
       }
-      var destination = path.join(directory, filename);
+
+
+      //Check if file already exists?
       var exists = fs.existsSync(destination)
-
-      if (!exists) {
-        if (file.extract) {
-          promiseDownloadAll.push(downloadextract(file.url, destination))
-        } else {
-          promiseDownloadAll.push(download(file.url, destination))
-        }
-      } else {
+      if (exists) {
         console.warn("File " + clc.green(destination) + " already exist, use the -force option to redownload the file")
+        continue;
       }
+
+      if (!file.extract) promiseDownloadAll.push(promiseDownload(file.url, destination))
+      if (file.extract) promiseDownloadAll.push(downloadExtract(file.url, destination))
+
+      // if (file.extract) {
+      //   promiseDownloadAll.push(downloadextract(file.url, destination))
+      // } else {
+      //   promiseDownloadAll.push(download(file.url, destination))
+      // }
+
     }
-    return Q.all(promiseDownloadAll).then(log);
+    return Promise.all(promiseDownloadAll).then(log);
   }
 
-  function downloadextract(url, destination) {
-    download(url, destination)
-      .then(function () {
-        return extractAll(destination)
-      })
-      .then(function () {
-        fs.unlinkSync(destination)
-      })
+  //------------
+  // Promise Handlers
+  //------------
+  function promiseDownload(url, destination) {
+    console.log("Downloading..." + clc.green(url));
+    return download(url, destination)
+      .then(function () { console.log("Download complete", destination) })
+  }
+  function promiseExtractDelete(fileToUnzip) {
+    return extractAll(fileToUnzip)
+      .then(function () { fs.unlinkSync(fileToUnzip) })
+  }
+  function downloadExtract(url, destination) {
+    return download(url, destination)
+      .then(function () { return extractAll(destination) })
+      .then(function () { fs.unlinkSync(destination) })
   }
 
-  function extractAll(destination) {
-    console.log("Unzipping all files from " + clc.green(destination) + " to the same directory");
-    var readStream = fs.createReadStream(destination);
-    var writeStream = fstream.Writer(path.dirname(destination));
 
-    return readStream
-      .pipe(unzip.Parse())
-      .pipe(writeStream)
+  //Returns Promise
+  function extractAll(zipfile) {
+    var to = path.dirname(zipfile)
+    console.log("Unzipping all files from " + clc.green(zipfile) + " to " + clc.green(to));
+
+    
+      
+    return new Promise((resolve, reject) => {
+      var zipReadStream = fs.createReadStream(zipfile);
+      var writeStream = fstream.Writer(to) //fs.createWriteStream(destination);  //fstream.Writer(path.dirname(destination));
+
+      //Get zip stats
+      var stats = fs.statSync(zipfile)
+      console.log("Zip archive is " + clc.green(stats.size) + " b ");
+
+      var bar = new ProgressBar(':bar', { total: 10 });
+      var bar = new ProgressBar('  extracting [:bar] :percent :etas', {
+        complete: '=',
+        incomplete: ' ',
+        width: 20,
+        total: stats.size
+      });
+
+
+      //Zip Progress
+      var zipSize = stats.size;
+      var uploadedSize = 0; // Incremented by on('data') to keep track of the amount of data we've uploaded
+      zipReadStream.on('data', function (chunk) {
+        bar.tick(chunk.length);
+        //var segmentLength = buffer.length;
+        // Increment the uploaded data counter
+        //uploadedSize += segmentLength;
+        // Display the upload percentage
+        //console.log("Progress:\t", ((uploadedSize / zipSize * 100).toFixed(2) + "%"));
+      });
+
+      zipReadStream
+        .pipe(unzip.Parse())
+        .pipe(writeStream)
+        .on("finish", () => { resolve(true); }) // not sure why you want to pass a boolean
+        .on("error", reject) // don't forget this!
+    });
+
   }
 
   function extractFiles(destination) {
@@ -323,7 +396,3 @@ function gitHubToUrl(git) {
 }
 
 
-module.exports.installRemotePart = installRemotePart
-module.exports.installPart = installPart
-module.exports.install = install
-module.exports.downloadGitPackage = downloadGitPackage
