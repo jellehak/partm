@@ -4,7 +4,11 @@ Why
 ---
 Software designers have been using package manager for a long time, now mechanical engineers can do the same! The proces of getting the right CAD files can be very time consuming. Searching for the right STEP files, downloading the datasheets, finding a good location to store them on your local drive, getting to know where you can buy it, request the price, check what the dimensions or weight is etc. Image doing this many times over, with partm you can do all this with one console command.
 
-Not only will this save you time but imagine what other applications can be created with this open source database. Companies that are willing to share their product information would greatly benefit from a system like this. They keep full control of their repository, can easily add new parts, or update their part information.
+Not to mention sharing design with others, just only send your custom created assembly and parts and the partm.json file. Saving many MB's of sending. All the receiver needs to do is run the partm install command.
+
+When your done designing you probably want to buy some parts, with all the meta data availible this is a breeze. Image you have to source all this information for each part.
+
+Manufacturers or vendors that incorporate partm can easily share their product information. They keep full control of their repository, can easily add new parts, or update their part information. 
 
 Installation
 ---

@@ -22,6 +22,8 @@ module.exports.install = install
 module.exports.downloadGitPackage = downloadGitPackage
 module.exports.downloadGitPackage = downloadGitPackage
 module.exports.promiseGetRemoteJson = promiseGetRemoteJson
+module.exports.downloadExtract = downloadExtract
+
 //----------------
 //App test
 //----------------
@@ -116,7 +118,11 @@ function promiseRequire(file) {
   return new Promise(function () { return require(file); })
   // return Q.fcall(function () { return require(file); });
 }
-
+  function downloadExtract(url, destination) {
+    return download(url, destination)
+      .then(function () { return extractAll(destination) })
+      .then(function () { fs.unlinkSync(destination) })
+  }
 
 
 function createComponentsFolder() {
@@ -129,6 +135,83 @@ function createComponentsFolder() {
   });
 }
 
+  //------------
+  // Promise Handlers
+  //------------
+  function promiseDownload(url, destination) {
+    console.log("Downloading..." + clc.green(url));
+    return download(url, destination)
+      .then(function () { console.log("Download complete", destination) })
+  }
+  function promiseExtractDelete(fileToUnzip) {
+    return extractAll(fileToUnzip)
+      .then(function () { fs.unlinkSync(fileToUnzip) })
+  }
+
+
+
+  //Returns Promise
+  function extractAll(zipfile) {
+    var to = path.dirname(zipfile)
+    console.log("Unzipping all files from " + clc.green(zipfile) + " to " + clc.green(to));
+
+    
+      
+    return new Promise((resolve, reject) => {
+      var zipReadStream = fs.createReadStream(zipfile);
+      var writeStream = fstream.Writer(to) //fs.createWriteStream(destination);  //fstream.Writer(path.dirname(destination));
+
+      //Get zip stats
+      var stats = fs.statSync(zipfile)
+      console.log("Zip archive is " + clc.green(stats.size) + " b ");
+
+      var bar = new ProgressBar(':bar', { total: 10 });
+      var bar = new ProgressBar('  extracting [:bar] :percent :etas', {
+        complete: '=',
+        incomplete: ' ',
+        width: 20,
+        total: stats.size
+      });
+
+
+      //Zip Progress
+      var zipSize = stats.size;
+      var uploadedSize = 0; // Incremented by on('data') to keep track of the amount of data we've uploaded
+      zipReadStream.on('data', function (chunk) {
+        bar.tick(chunk.length);
+        //var segmentLength = buffer.length;
+        // Increment the uploaded data counter
+        //uploadedSize += segmentLength;
+        // Display the upload percentage
+        //console.log("Progress:\t", ((uploadedSize / zipSize * 100).toFixed(2) + "%"));
+      });
+
+      zipReadStream
+        .pipe(unzip.Parse())
+        .pipe(writeStream)
+        .on("finish", () => { resolve(true); }) // not sure why you want to pass a boolean
+        .on("error", reject) // don't forget this!
+    });
+
+  }
+
+  function extractFiles(destination) {
+    console.log("Unzipping...", clc.green(destination));
+    return fs.createReadStream(destination)
+      .pipe(unzip.Parse())
+      .on('entry', function (entry) {
+        var fileName = entry.path;
+        var type = entry.type; // 'Directory' or 'File' 
+        var size = entry.size;
+        if (fileName === "this IS the file I'm looking for") {
+          entry.pipe(fs.createWriteStream('output/path'));
+        } else {
+          entry.autodrain();
+        }
+      });
+  }
+
+  
 //------------
 // Part Class
 //------------
@@ -195,7 +278,8 @@ function Part(obj) {
       //Check filename
       var filename = path.basename(file.url)
       if (!validFilename(filename)) {
-        filename = uuid.v4() + '.zip'  //TODO Add valid extension?
+        throw "Not a valid filename"
+        //filename = uuid.v4() + '.zip'  //TODO Add valid extension?
       }
 
       //Create destination
@@ -226,86 +310,6 @@ function Part(obj) {
 
     }
     return Promise.all(promiseDownloadAll).then(log);
-  }
-
-  //------------
-  // Promise Handlers
-  //------------
-  function promiseDownload(url, destination) {
-    console.log("Downloading..." + clc.green(url));
-    return download(url, destination)
-      .then(function () { console.log("Download complete", destination) })
-  }
-  function promiseExtractDelete(fileToUnzip) {
-    return extractAll(fileToUnzip)
-      .then(function () { fs.unlinkSync(fileToUnzip) })
-  }
-  function downloadExtract(url, destination) {
-    return download(url, destination)
-      .then(function () { return extractAll(destination) })
-      .then(function () { fs.unlinkSync(destination) })
-  }
-
-
-  //Returns Promise
-  function extractAll(zipfile) {
-    var to = path.dirname(zipfile)
-    console.log("Unzipping all files from " + clc.green(zipfile) + " to " + clc.green(to));
-
-    
-      
-    return new Promise((resolve, reject) => {
-      var zipReadStream = fs.createReadStream(zipfile);
-      var writeStream = fstream.Writer(to) //fs.createWriteStream(destination);  //fstream.Writer(path.dirname(destination));
-
-      //Get zip stats
-      var stats = fs.statSync(zipfile)
-      console.log("Zip archive is " + clc.green(stats.size) + " b ");
-
-      var bar = new ProgressBar(':bar', { total: 10 });
-      var bar = new ProgressBar('  extracting [:bar] :percent :etas', {
-        complete: '=',
-        incomplete: ' ',
-        width: 20,
-        total: stats.size
-      });
-
-
-      //Zip Progress
-      var zipSize = stats.size;
-      var uploadedSize = 0; // Incremented by on('data') to keep track of the amount of data we've uploaded
-      zipReadStream.on('data', function (chunk) {
-        bar.tick(chunk.length);
-        //var segmentLength = buffer.length;
-        // Increment the uploaded data counter
-        //uploadedSize += segmentLength;
-        // Display the upload percentage
-        //console.log("Progress:\t", ((uploadedSize / zipSize * 100).toFixed(2) + "%"));
-      });
-
-      zipReadStream
-        .pipe(unzip.Parse())
-        .pipe(writeStream)
-        .on("finish", () => { resolve(true); }) // not sure why you want to pass a boolean
-        .on("error", reject) // don't forget this!
-    });
-
-  }
-
-  function extractFiles(destination) {
-    console.log("Unzipping...", clc.green(destination));
-    return fs.createReadStream(destination)
-      .pipe(unzip.Parse())
-      .on('entry', function (entry) {
-        var fileName = entry.path;
-        var type = entry.type; // 'Directory' or 'File' 
-        var size = entry.size;
-        if (fileName === "this IS the file I'm looking for") {
-          entry.pipe(fs.createWriteStream('output/path'));
-        } else {
-          entry.autodrain();
-        }
-      });
   }
 
 
