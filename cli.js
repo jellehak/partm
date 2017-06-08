@@ -1,10 +1,14 @@
+/*
+Handles the CLI
+*/
 var argv = require('optimist').argv;
 var partm = require('./partm');
 var commands = require('./util/commands');
 //const shell = require('electron').shell;
 var path = require('path')
 var request = require('request')
-
+var inquirer = require('inquirer');
+const opn = require('opn');
 
 //console.log(argv)
 //console.log("CWD",process.cwd())
@@ -14,6 +18,8 @@ var cwd = process.cwd()
 //Temp/Debug commands
 commands.add("grabcad", grabcad)
 //Commands
+commands.add("init", init)
+commands.add("open", open)
 commands.add("download", download)
 commands.add("read", read)
 commands.add("install", install)
@@ -27,6 +33,53 @@ commands.run(argv._);
 //-------------
 // Command handlers
 //-------------
+function open(argv) {
+  partm.get()
+    .then((file) => {
+      console.log(file)
+      // image viewer closed 
+      opn(file.mainfile).then(() => {
+        // image viewer closed 
+      });
+    });
+}
+
+
+function init(argv) {
+
+  var questions = [
+    {
+      type: 'string',
+      message: 'Enter a title',
+      name: 'title'
+    },
+    {
+      type: 'string',
+      message: 'Enter the filename of the CAD data',
+      name: 'mainfile',
+      mask: '*'
+    }
+  ]
+
+  inquirer.prompt(questions)
+  .then(function (answers) {
+    // Use user feedback for... whatever!! 
+    console.log(answers)
+
+    partm.detect().then((components) => {
+      console.log(components)
+      answers.components = components
+    }).then((test) => {
+      partm.init(answers)
+    })
+
+  })
+
+
+
+}
+
+
 function read(argv) {
   var endpoint = argv[1]
 
@@ -101,6 +154,9 @@ function grabcad(argv) {
       //console.log(data)
     })
 }
+
+
+
 
 
 function install(argv) {
