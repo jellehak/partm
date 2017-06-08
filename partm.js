@@ -16,13 +16,21 @@ Promise.promisifyAll(fs);
 //----------------
 // Exports
 //----------------
-module.exports.installRemotePart = installRemotePart
-module.exports.installPart = installPart
-module.exports.install = install
-module.exports.downloadGitPackage = downloadGitPackage
-module.exports.downloadGitPackage = downloadGitPackage
-module.exports.promiseGetRemoteJson = promiseGetRemoteJson
-module.exports.downloadExtract = downloadExtract
+methods = {}
+methods.installRemotePart = installRemotePart
+methods.installPart = installPart
+methods.install = install
+methods.downloadGitPackage = downloadGitPackage
+methods.promiseGetRemoteJson = promiseGetRemoteJson
+methods.downloadExtract = downloadExtract
+methods.init = init
+methods.get = get
+methods.detect = detect
+
+
+module.exports = methods
+
+
 
 //----------------
 //App test
@@ -33,6 +41,39 @@ module.exports.downloadExtract = downloadExtract
 //     //console.log(data)
 //   })
 
+function detect() {
+  //console.log("WIP")
+  return fs.readdirAsync("./components")
+}
+
+
+
+function init(data) {
+  //console.log("WIP")
+  return writeFile('part.json',JSON.stringify(data) )
+}
+
+function writeFile(file,data) {
+  return new Promise(function(resolve, reject) {
+      fs.writeFile(file, data, function(err) {
+          if (err) reject(err);
+          else resolve(data);
+      });
+  });
+}
+
+function read(file) {
+  return new Promise(function(resolve, reject) {
+      resolve(JSON.parse(fs.readFileSync(file, 'utf8')))
+  });
+}
+
+
+
+
+function get() {
+  return read('part.json')
+}
 
 //----------------
 // Helpers
